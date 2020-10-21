@@ -32,12 +32,14 @@ int main (int argc, char **argv)
         int hz=5;
 
 	ros::init (argc, argv, "publish_pointcloud");  
-	ros::NodeHandle nh;  
+	ros::NodeHandle nh;
+	ros::NodeHandle
 
-        nh.param<std::string>("path", path, "/home/crp/catkin_ws/test.pcd");
+	//nh.param<std::string>("path", path, "/media/trinity/WJN/slambook-master/ch5/joinMap/cmake-build-debug/gaoxiang_map.pcd");
+    nh.param<std::string>("path", path, "/home/trinity/catkin_ws1/src/publish_pointcloud/data/test.copy.pcd");
 	nh.param<std::string>("frame_id", frame_id, "camera");
 	nh.param<std::string>("topic", topic, "/pointcloud/output");
-        nh.param<int>("hz", hz, 5);
+	nh.param<int>("hz", hz, 5);
    
 	ros::Publisher pcl_pub = nh.advertise<sensor_msgs::PointCloud2> (topic, 10);  
 
