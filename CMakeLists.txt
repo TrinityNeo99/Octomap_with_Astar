@@ -130,7 +130,7 @@ include_directories(
 )
 
 
-add_executable(publish_pointcloud src/publish_pointcloud.cpp)
+add_executable(publish_pointcloud src/publish_pointcloud.cpp src/referance_to_path.cpp)
 
 target_link_libraries(publish_pointcloud
 	${catkin_LIBRARIES}
