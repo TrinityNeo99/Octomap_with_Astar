@@ -59,12 +59,59 @@ int main (int argc, char **argv)
 	output.header.frame_id  =frame_id;
 
 
+    ros::NodeHandle ph;
+    ros::Publisher path_pub = ph.advertise<nav_msgs::Path>("path",1, true);
 
+    ros::Time current_time, last_time;
+    current_time = ros::Time::now();
+    last_time = ros::Time::now();
+
+    nav_msgs::Path path;
+    //nav_msgs::Path path;
+    path.header.stamp=current_time;
+    path.header.frame_id="camera";
+
+
+    double x = 0.0;
+    double y = 0.0;
+    double th = 0.0;
+    double vx = 0.1;
+    double vy = -0.1;
+    double vth = 0.1;
 
 	ros::Rate loop_rate(hz);  
 	while (ros::ok())  
 	{  
-		pcl_pub.publish(output);  
+		pcl_pub.publish(output);
+
+        current_time = ros::Time::now();
+        //compute odometry in a typical way given the velocities of the robot
+        double dt = 0.1;
+        double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
+        double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
+        double delta_th = vth * dt;
+
+        x += delta_x;
+        y += delta_y;
+        th += delta_th;
+
+
+        geometry_msgs::PoseStamped this_pose_stamped;
+        this_pose_stamped.pose.position.x = x;
+        this_pose_stamped.pose.position.y = y;
+
+        geometry_msgs::Quaternion goal_quat = tf::createQuaternionMsgFromYaw(th);
+        this_pose_stamped.pose.orientation.x = goal_quat.x;
+        this_pose_stamped.pose.orientation.y = goal_quat.y;
+        this_pose_stamped.pose.orientation.z = goal_quat.z;
+        this_pose_stamped.pose.orientation.w = goal_quat.w;
+
+        this_pose_stamped.header.stamp=current_time;
+        this_pose_stamped.header.frame_id="camera";
+        path.poses.push_back(this_pose_stamped);
+
+        path_pub.publish(path);
+        last_time = current_time;
 		ros::spinOnce();  
 		loop_rate.sleep();  
 	}  
