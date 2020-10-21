@@ -72,12 +72,8 @@ int main (int argc, char **argv)
     path.header.frame_id="camera";
 
 
-    double x = 0.0;
-    double y = 0.0;
-    double th = 0.0;
-    double vx = 0.1;
-    double vy = -0.1;
-    double vth = 0.1;
+    int x = -4;
+    int y = -4;
 
 	ros::Rate loop_rate(hz);  
 	while (ros::ok())  
@@ -85,26 +81,13 @@ int main (int argc, char **argv)
 		pcl_pub.publish(output);
 
         current_time = ros::Time::now();
-        //compute odometry in a typical way given the velocities of the robot
-        double dt = 0.1;
-        double delta_x = (vx * cos(th) - vy * sin(th)) * dt;
-        double delta_y = (vx * sin(th) + vy * cos(th)) * dt;
-        double delta_th = vth * dt;
 
-        x += delta_x;
-        y += delta_y;
-        th += delta_th;
-
+        x = (x + 1) % 5;
+        y = (y + 1) % 4;
 
         geometry_msgs::PoseStamped this_pose_stamped;
         this_pose_stamped.pose.position.x = x;
         this_pose_stamped.pose.position.y = y;
-
-        geometry_msgs::Quaternion goal_quat = tf::createQuaternionMsgFromYaw(th);
-        this_pose_stamped.pose.orientation.x = goal_quat.x;
-        this_pose_stamped.pose.orientation.y = goal_quat.y;
-        this_pose_stamped.pose.orientation.z = goal_quat.z;
-        this_pose_stamped.pose.orientation.w = goal_quat.w;
 
         this_pose_stamped.header.stamp=current_time;
         this_pose_stamped.header.frame_id="camera";
