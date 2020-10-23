@@ -127,10 +127,12 @@ include_directories(
 	${catkin_INCLUDE_DIRS}
 	${OpenCV_INCLUDE_DIRS}
 	${PCL_INCLUDE_DIRS}
+	"/home/trinity/catkin_ws1/src/publish_pointcloud/src"
+	"/home/trinity/catkin_ws1/src/publish_pointcloud/src"
 )
 
 
-add_executable(publish_pointcloud src/publish_pointcloud.cpp src/referance_to_path.cpp)
+add_executable(publish_pointcloud src/publish_pointcloud.cpp src/referance_to_path.cpp src/Astar.cpp)
 
 target_link_libraries(publish_pointcloud
 	${catkin_LIBRARIES}

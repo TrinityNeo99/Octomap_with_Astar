@@ -7,37 +7,15 @@
 * data: 2016-6-8
 */
 
-
-#include<iostream>
-#include<string>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sstream>
-#include <vector>
-
-#include<ros/ros.h>  
-#include<pcl/point_cloud.h>  
-#include<pcl_conversions/pcl_conversions.h>  
-#include<sensor_msgs/PointCloud2.h>  
-#include<pcl/io/pcd_io.h>
-
-#include <ros/console.h>
-#include <nav_msgs/Path.h>
-#include <std_msgs/String.h>
-#include <geometry_msgs/Quaternion.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <tf/transform_broadcaster.h>
-#include <tf/tf.h>
-
-using namespace std;
-
-
+#include "publish_pcd_nvg.h"
+#include <Astar.h>
+list<Point *> useAstar (void);
 int main (int argc, char **argv)  
 {  
 
     
 	std::string topic,path2cloud,frame_id;
-        int hz=5;
+	int hz=5;
 
 	ros::init (argc, argv, "publish_pointcloud");  
 	ros::NodeHandle nh;
@@ -72,31 +50,84 @@ int main (int argc, char **argv)
     path.header.frame_id="camera";
 
 
+
     int x = -4;
     int y = -4;
+    list<Point *> nvg_path;
+    nvg_path = useAstar();
+    geometry_msgs::PoseStamped mypose;
+    for (auto &p : nvg_path)
+    {
+        mypose.pose.position.x = (p->y - 4.5) * 0.8;
+        mypose.pose.position.y = -(p->x - 5.5) * 0.8 ;
+        mypose.header.stamp = current_time;
+        mypose.header.frame_id = "camera";
+        path.poses.push_back(mypose);
+    }
 
-	ros::Rate loop_rate(hz);  
-	while (ros::ok())  
+
+    int a[5] = {1,2,3,4,5};
+
+    for(int i = 0; i < 5 ;i ++)
+    {
+       //
+    }
+
+
+
+	ros::Rate loop_rate(hz);
+	while (ros::ok())
 	{  
 		pcl_pub.publish(output);
-
-        current_time = ros::Time::now();
-
-        x = (x + 1) % 5;
-        y = (y + 1) % 4;
-
-        geometry_msgs::PoseStamped this_pose_stamped;
-        this_pose_stamped.pose.position.x = x;
-        this_pose_stamped.pose.position.y = y;
-
-        this_pose_stamped.header.stamp=current_time;
-        this_pose_stamped.header.frame_id="camera";
-        path.poses.push_back(this_pose_stamped);
-
         path_pub.publish(path);
-        last_time = current_time;
 		ros::spinOnce();  
 		loop_rate.sleep();  
 	}  
 	return 0;  
-}  
+}
+
+list<Point *> useAstar (void)
+{
+    //初始化地图，用二维矩阵代表地图，1表示障碍物，0表示可通
+    vector<vector<int>> maze = {
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+    };
+    Astar astar;
+    astar.InitAstar(maze);
+
+    //设置起始和结束点
+    Point start(5, 1);
+    Point end(4, 9);
+    //A*算法找寻路径
+    list<Point *> path = astar.GetPath(start, end, false);
+    //打印
+    for (auto &p : path)
+    {
+        cout << '(' << p->x << ',' << p->y << ')' << endl;
+        maze[p->x][p->y] = 5;
+    }
+
+
+
+    for(vector<vector<int>> :: iterator i = maze.begin(); i < maze.end(); i++)
+    {
+        for(vector<int> :: iterator j = i->begin(); j < i->end(); j++)
+        {
+            if(*j == 1)cout << "#  ";
+            else if(*j == 0) cout << "   ";
+            else if(*j == 5) cout << "*  ";
+        }
+        cout << endl;
+    }
+    return path;
+}
